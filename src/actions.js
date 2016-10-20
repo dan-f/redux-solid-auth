@@ -10,8 +10,14 @@ export function authenticate () {
   return dispatch => {
     dispatch(request())
     return solid.login()
-      .then(webId => dispatch(success(webId)))
-      .catch(error => dispatch(failure(error)))
+      .then(webId => {
+        dispatch(success(webId))
+        return webId
+      })
+      .catch(error => {
+        dispatch(failure(error))
+        throw error
+      })
   }
 }
 
