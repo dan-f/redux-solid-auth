@@ -20,36 +20,40 @@ describe('auth actions', () => {
       return {loginSpy, InjectedActions}
     }
 
-    it('dispatches a request and success action when logging in works', (done) => {
+    it('dispatches a request and success action when logging in works', () => {
       const webId = 'https://example.com/profile/card#me'
       const {loginSpy, InjectedActions} = substituteSolidLogin(() => Promise.resolve(webId))
       const dispatch = action => Promise.resolve(action)
       const dispatchSpy = spy(dispatch)
-      InjectedActions.authenticate()(dispatchSpy)
-        .then(() => {
+      return InjectedActions.authenticate()(dispatchSpy)
+        .then(authWebId => {
           expect(dispatchSpy.calledWith({type: AUTH_REQUEST})).toBe(true)
           expect(loginSpy.called).toBe(true)
           expect(dispatchSpy.calledWith({
             type: AUTH_SUCCESS,
             webId
           })).toBe(true)
-          done()
+          expect(authWebId).toEqual(webId)
         })
     })
 
-    it('dispatches a request and failure action when logging in fails', (done) => {
-      const {loginSpy, InjectedActions} = substituteSolidLogin(() => Promise.reject(new Error('oops!')))
+    it('dispatches a request and failure action when logging in fails', () => {
+      const error = new Error('oops!')
+      const {loginSpy, InjectedActions} = substituteSolidLogin(() => Promise.reject(error))
       const dispatch = action => Promise.resolve(action)
       const dispatchSpy = spy(dispatch)
-      InjectedActions.authenticate()(dispatchSpy)
-        .then(error => {
+      return InjectedActions.authenticate()(dispatchSpy)
+        .then(() => {
+          throw new Error('Expected promise to fail')
+        })
+        .catch(err => {
           expect(dispatchSpy.calledWith({type: AUTH_REQUEST})).toBe(true)
           expect(loginSpy.called).toBe(true)
           expect(dispatchSpy.calledWith({
             type: AUTH_FAILURE,
             error
           }))
-          done()
+          expect(err).toEqual(error)
         })
     })
   })
