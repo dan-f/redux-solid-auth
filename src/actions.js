@@ -21,18 +21,33 @@ export function authenticate () {
   }
 }
 
-export function request () {
+export function checkAuthenticated () {
+  return dispatch => {
+    dispatch(request())
+    return solid.currentUser()
+      .then(webId => {
+        dispatch(success(webId))
+        return webId
+      })
+      .catch(error => {
+        dispatch(failure(error))
+        throw error
+      })
+  }
+}
+
+function request () {
   return { type: AUTH_REQUEST }
 }
 
-export function success (webId) {
+function success (webId) {
   return {
     type: AUTH_SUCCESS,
     webId
   }
 }
 
-export function failure (error) {
+function failure (error) {
   return {
     type: AUTH_FAILURE,
     error
