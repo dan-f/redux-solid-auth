@@ -3,7 +3,6 @@ import expect from 'expect'
 import proxyquire from 'proxyquire'
 import { spy } from 'sinon'
 
-import * as Actions from '../src/actions'
 import {
   AUTH_REQUEST,
   AUTH_SUCCESS,
@@ -11,20 +10,31 @@ import {
 } from '../src/action-types'
 
 describe('auth actions', () => {
-  describe('authenticate', () => {
-    function substituteSolidLogin (loginFn) {
-      const loginSpy = spy(loginFn)
-      const InjectedActions = proxyquire('../src/actions', {
-        'solid-client': {login: loginSpy}
-      })
-      return {loginSpy, InjectedActions}
-    }
+  let dispatch, dispatchSpy
 
+  beforeEach(() => {
+    dispatch = action => Promise.resolve(action)
+    dispatchSpy = spy(dispatch)
+  })
+
+  function injectSolidWith ({currentUser, login}) {
+    const currentUserSpy = spy(currentUser)
+    const loginSpy = spy(login)
+    const InjectedActions = proxyquire('../src/actions', {
+      'solid-client': {
+        currentUser: currentUserSpy,
+        login: loginSpy
+      }
+    })
+    return {currentUserSpy, loginSpy, InjectedActions}
+  }
+
+  describe('authenticate', () => {
     it('dispatches a request and success action when logging in works', () => {
       const webId = 'https://example.com/profile/card#me'
-      const {loginSpy, InjectedActions} = substituteSolidLogin(() => Promise.resolve(webId))
-      const dispatch = action => Promise.resolve(action)
-      const dispatchSpy = spy(dispatch)
+      const {loginSpy, InjectedActions} = injectSolidWith({
+        login: () => Promise.resolve(webId)
+      })
       return InjectedActions.authenticate()(dispatchSpy)
         .then(authWebId => {
           expect(dispatchSpy.calledWith({type: AUTH_REQUEST})).toBe(true)
@@ -39,13 +49,10 @@ describe('auth actions', () => {
 
     it('dispatches a request and failure action when logging in fails', () => {
       const error = new Error('oops!')
-      const {loginSpy, InjectedActions} = substituteSolidLogin(() => Promise.reject(error))
-      const dispatch = action => Promise.resolve(action)
-      const dispatchSpy = spy(dispatch)
+      const {loginSpy, InjectedActions} = injectSolidWith({
+        login: () => Promise.reject(error)
+      })
       return InjectedActions.authenticate()(dispatchSpy)
-        .then(() => {
-          throw new Error('Expected promise to fail')
-        })
         .catch(err => {
           expect(dispatchSpy.calledWith({type: AUTH_REQUEST})).toBe(true)
           expect(loginSpy.called).toBe(true)
@@ -58,29 +65,39 @@ describe('auth actions', () => {
     })
   })
 
-  describe('request', () => {
-    it('can create a request action', () => {
-      expect(Actions.request()).toEqual({type: AUTH_REQUEST})
-    })
-  })
-
-  describe('success', () => {
-    it('can create a success action', () => {
+  describe('checkAuthenticated', () => {
+    it('dispatches a request and success action when checking authentication works', () => {
       const webId = 'https://example.com/profile/card#me'
-      expect(Actions.success(webId)).toEqual({
-        type: AUTH_SUCCESS,
-        webId
+      const {currentUserSpy, InjectedActions} = injectSolidWith({
+        currentUser: () => Promise.resolve(webId)
       })
+      return InjectedActions.checkAuthenticated()(dispatchSpy)
+        .then(authWebId => {
+          expect(dispatchSpy.calledWith({type: AUTH_REQUEST})).toBe(true)
+          expect(currentUserSpy.called).toBe(true)
+          expect(dispatchSpy.calledWith({
+            type: AUTH_SUCCESS,
+            webId
+          })).toBe(true)
+          expect(authWebId).toEqual(webId)
+        })
     })
-  })
 
-  describe('failure', () => {
-    it('can create a failure action', () => {
-      const error = {status: 500}
-      expect(Actions.failure(error)).toEqual({
-        type: AUTH_FAILURE,
-        error
+    it('dispatches a request and failure action when checking authentication fails', () => {
+      const error = new Error('oops!')
+      const {currentUserSpy, InjectedActions} = injectSolidWith({
+        currentUser: () => Promise.reject(error)
       })
+      return InjectedActions.checkAuthenticated()(dispatchSpy)
+        .catch(err => {
+          expect(dispatchSpy.calledWith({type: AUTH_REQUEST})).toBe(true)
+          expect(currentUserSpy.called).toBe(true)
+          expect(dispatchSpy.calledWith({
+            type: AUTH_FAILURE,
+            error
+          }))
+          expect(err).toEqual(error)
+        })
     })
   })
 })

@@ -6,7 +6,7 @@ import {
   AUTH_FAILURE
 } from './action-types'
 
-export function webId (state = '', action) {
+export function webId (state = null, action) {
   switch (action.type) {
     case AUTH_SUCCESS:
       return action.webId
