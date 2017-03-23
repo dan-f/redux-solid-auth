@@ -39,7 +39,7 @@
     "redux-thunk": "^2.1.0"
   },
   "dependencies": {
-    "solid-auth-tls": "^0.1.0"
+    "solid-auth-tls": "^0.1.1"
   },
   "devDependencies": {
     "babel-cli": "^6.16.0",
