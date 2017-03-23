@@ -1,4 +1,4 @@
-import solid from 'solid-client'
+import { login, currentUser } from 'solid-auth-tls'
 
 import {
   AUTH_REQUEST,
@@ -6,25 +6,14 @@ import {
   AUTH_FAILURE
 } from './action-types'
 
-export function authenticate () {
-  return dispatch => {
-    dispatch(request())
-    return solid.login()
-      .then(webId => {
-        dispatch(success(webId))
-        return webId
-      })
-      .catch(error => {
-        dispatch(failure(error))
-        throw error
-      })
-  }
-}
+export const authenticate = config => authAction(login, config)
 
-export function checkAuthenticated () {
+export const checkAuthenticated = config => authAction(currentUser, config)
+
+function authAction (authFn, config) {
   return dispatch => {
     dispatch(request())
-    return solid.currentUser()
+    return authFn(config)
       .then(webId => {
         dispatch(success(webId))
         return webId

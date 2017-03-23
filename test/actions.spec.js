@@ -21,7 +21,7 @@ describe('auth actions', () => {
     const currentUserSpy = spy(currentUser)
     const loginSpy = spy(login)
     const InjectedActions = proxyquire('../src/actions', {
-      'solid-client': {
+      'solid-auth-tls': {
         currentUser: currentUserSpy,
         login: loginSpy
       }
@@ -63,6 +63,20 @@ describe('auth actions', () => {
           expect(err).toEqual(error)
         })
     })
+
+    it('passes a configuration object to the login function if provided', () => {
+      const {loginSpy, InjectedActions} = injectSolidWith({
+        login: () => Promise.resolve()
+      })
+      return InjectedActions.authenticate()(dispatchSpy)
+        .then(() => {
+          expect(loginSpy.calledWithExactly(undefined)).toBe(true)
+        })
+        .then(InjectedActions.authenticate({ foo: 'bar' })(dispatchSpy))
+        .then(() => {
+          expect(loginSpy.calledWithExactly({ foo: 'bar' })).toBe(true)
+        })
+    })
   })
 
   describe('checkAuthenticated', () => {
@@ -97,6 +111,20 @@ describe('auth actions', () => {
             error
           }))
           expect(err).toEqual(error)
+        })
+    })
+
+    it('passes a configuration object to the currentUser function if provided', () => {
+      const {currentUserSpy, InjectedActions} = injectSolidWith({
+        currentUser: () => Promise.resolve()
+      })
+      return InjectedActions.checkAuthenticated()(dispatchSpy)
+        .then(() => {
+          expect(currentUserSpy.calledWithExactly(undefined)).toBe(true)
+        })
+        .then(InjectedActions.checkAuthenticated({ foo: 'bar' })(dispatchSpy))
+        .then(() => {
+          expect(currentUserSpy.calledWithExactly({ foo: 'bar' })).toBe(true)
         })
     })
   })
