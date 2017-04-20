@@ -1,6 +1,6 @@
 {
   "name": "redux-solid-auth",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Actions, types, and reducers for authenticating with solid",
   "main": "lib/index.js",
   "files": [
