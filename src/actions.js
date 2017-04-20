@@ -25,18 +25,18 @@ function authAction (authFn, config) {
   }
 }
 
-function request () {
+export function request () {
   return { type: AUTH_REQUEST }
 }
 
-function success (webId) {
+export function success (webId) {
   return {
     type: AUTH_SUCCESS,
     webId
   }
 }
 
-function failure (error) {
+export function failure (error) {
   return {
     type: AUTH_FAILURE,
     error
